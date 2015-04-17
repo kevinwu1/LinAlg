@@ -3,7 +3,7 @@ package linAlg;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Vec<T extends Self<T>> extends Self<Vec<T>> {
+public class Vec<T extends MathOb<T>> extends MathOb<Vec<T>> {
 	private final List<T> data = new ArrayList<>();
 
 	@Override
@@ -37,24 +37,17 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 		T o = data.get(0).mult(v.get(0));
 		if (data.size() != v.size())
 			throw new IllegalArgumentException("Length doesn't match");
-		for (int i = 1; i < data.size(); i++) {
+		for (int i = 1; i < data.size(); i++)
 			o = o.add(data.get(i).mult(v.get(i)));
-		}
 		return o;
 	}
 
 	@Override
 	public Vec<T> mult(Vec<T> t) {
 		VecBuilder<T> vb = new VecBuilder<>();
-		for (int i = 0; i < data.size(); i++) {
+		for (int i = 0; i < data.size(); i++)
 			vb.push(data.get(i).mult(t.data.get(i)));
-		}
 		return vb.build();
-	}
-
-	@Override
-	Vec<T> self() {
-		return this;
 	}
 
 	@Override
@@ -74,7 +67,7 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 		data.set(i, d);
 	}
 
-	public static class VecBuilder<T extends Self<T>> {
+	public static class VecBuilder<T extends MathOb<T>> {
 		List<T> data = new ArrayList<>();
 
 		VecBuilder() {
@@ -101,15 +94,15 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 
 	}
 
-	static Vec<Scalar> ints(int... ar) {
-		VecBuilder<Scalar> vb = new VecBuilder<>();
+	static Vec<Scal> ints(int... ar) {
+		VecBuilder<Scal> vb = new VecBuilder<>();
 		for (int i : ar)
-			vb.push(new Scalar(i));
+			vb.push(new Scal(i));
 		return vb.build();
 	}
 
 	@Override
-	public Vec<T> mult(Scalar S) {
+	public Vec<T> mult(Scal S) {
 		VecBuilder<T> vb = new VecBuilder<>();
 		for (T d : data)
 			vb.push(d.mult(S));
@@ -117,7 +110,7 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 	}
 
 	@Override
-	public Vec<T> div(Scalar S) {
+	public Vec<T> div(Scal S) {
 		VecBuilder<T> vb = new VecBuilder<>();
 		for (T d : data)
 			vb.push(d.div(S));
@@ -125,7 +118,7 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 	}
 
 	@Override
-	public Vec<T> add(Scalar S) {
+	public Vec<T> add(Scal S) {
 		VecBuilder<T> vb = new VecBuilder<>();
 		for (T d : data)
 			vb.push(d.add(S));
@@ -133,7 +126,7 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 	}
 
 	@Override
-	public Vec<T> sub(Scalar S) {
+	public Vec<T> sub(Scal S) {
 		VecBuilder<T> vb = new VecBuilder<>();
 		for (T d : data)
 			vb.push(d.sub(S));
@@ -145,9 +138,8 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 		if (data.size() != t.size())
 			return undef();
 		VecBuilder<T> vb = new VecBuilder<>();
-		for (int i = 0; i < data.size(); i++) {
+		for (int i = 0; i < data.size(); i++)
 			vb.push(data.get(i).add(t.get(i)));
-		}
 		return vb.build();
 	}
 
@@ -156,9 +148,8 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 		if (data.size() != t.size())
 			return undef();
 		VecBuilder<T> vb = new VecBuilder<>();
-		for (int i = 0; i < data.size(); i++) {
+		for (int i = 0; i < data.size(); i++)
 			vb.push(data.get(i).sub(t.get(i)));
-		}
 		return vb.build();
 	}
 
@@ -173,5 +164,10 @@ public class Vec<T extends Self<T>> extends Self<Vec<T>> {
 
 	public Vec<T> rot(int n) {
 		return new Vec<>(data.subList(n, data.size()), data.subList(0, n));
+	}
+
+	@Override
+	String getType() {
+		return "Vec";
 	}
 }

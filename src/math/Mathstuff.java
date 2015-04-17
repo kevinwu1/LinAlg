@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class MathT {
+public final class Mathstuff {
 	public static void main(String[] args) {
 		System.out.println(Arrays.toString(factor(12)));
 		System.out.println(GCF(5, 10));
@@ -25,18 +25,16 @@ public final class MathT {
 
 	public static int[] factor(int x) {
 		List<Integer> o = new ArrayList<>();
-		for (int i = 2; i * i <= x; i++) {
+		for (int i = 2; i * i <= x; i++)
 			while (x % i == 0) {
 				x /= i;
 				o.add(i);
 			}
-		}
 		if (x != 1)
 			o.add(x);
 		int[] out = new int[o.size()];
-		for (int i = 0; i < o.size(); i++) {
+		for (int i = 0; i < o.size(); i++)
 			out[i] = o.get(i);
-		}
 		return out;
 	}
 }

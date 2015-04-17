@@ -1,11 +1,11 @@
 package linAlg;
 
 public interface Scalable<T> {
-	public T mult(Scalar S);
+	public T mult(Scal S);
 
-	public T div(Scalar S);
+	public T div(Scal S);
 
-	public T add(Scalar S);
+	public T add(Scal S);
 
-	public T sub(Scalar S);
+	public T sub(Scal S);
 }

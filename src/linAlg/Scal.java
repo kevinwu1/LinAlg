@@ -1,25 +1,25 @@
 package linAlg;
 
-import static math.MathT.GCF;
-import static math.MathT.factor;
+import static math.Mathstuff.GCF;
+import static math.Mathstuff.factor;
 
-public class Scalar extends Self<Scalar> {
-	public static final Scalar ZERO = new Scalar(0);
-	public static final Scalar UNDEFINED = new Scalar(0, 0);
+public class Scal extends MathOb<Scal> {
+	public static final Scal ZERO = new Scal(0);
+	public static final Scal UNDEFINED = new Scal(0, 0);
 
 	int t, b;
 
-	public Scalar(int t) {
+	public Scal(int t) {
 		this(t, 1);
 	}
 
-	public Scalar(int t, int b) {
+	public Scal(int t, int b) {
 		this.t = t;
 		this.b = b;
 		reduce();
 	}
 
-	public <T extends Self<T>> Vec<T> mult(Vec<T> v) {
+	public <T extends MathOb<T>> Vec<T> mult(Vec<T> v) {
 		return null;
 	}
 
@@ -47,29 +47,24 @@ public class Scalar extends Self<Scalar> {
 	}
 
 	@Override
-	Scalar self() {
-		return this;
+	public Scal mult(Scal S) {
+		return new Scal(t * S.t, b * S.b);
 	}
 
 	@Override
-	public Scalar mult(Scalar S) {
-		return new Scalar(t * S.t, b * S.b);
+	public Scal div(Scal S) {
+		return new Scal(t * S.b, b * S.t);
 	}
 
 	@Override
-	public Scalar div(Scalar S) {
-		return new Scalar(t * S.b, b * S.t);
-	}
-
-	@Override
-	public Scalar add(Scalar S) {
+	public Scal add(Scal S) {
 		int[] b1 = factor(b);
 		int[] b2 = factor(S.b);
 		int t1 = t;
 		int t2 = S.t;
 		int bot = 1;
 		int i, j;
-		for (i = 0, j = 0; i < b1.length && j < b2.length;) {
+		for (i = 0, j = 0; i < b1.length && j < b2.length;)
 			if (b1[i] < b2[j]) {
 				bot *= b1[i];
 				t2 *= b1[i++];
@@ -82,7 +77,6 @@ public class Scalar extends Self<Scalar> {
 				bot *= b1[i++];
 				j++;
 			}
-		}
 		while (j < b2.length) {
 			bot *= b2[j];
 			t1 *= b2[j++];
@@ -91,34 +85,39 @@ public class Scalar extends Self<Scalar> {
 			bot *= b1[i];
 			t2 *= b1[i++];
 		}
-		return new Scalar(t1 + t2, bot);
+		return new Scal(t1 + t2, bot);
 	}
 
-	public Scalar neg() {
-		return new Scalar(-t, b);
+	public Scal neg() {
+		return new Scal(-t, b);
 	}
 
-	public Scalar inverse() {
-		return new Scalar(-b, t);
+	public Scal inverse() {
+		return new Scal(-b, t);
 	}
 
-	public Scalar recip() {
-		return new Scalar(b, t);
+	public Scal recip() {
+		return new Scal(b, t);
 	}
 
 	@Override
-	public Scalar sub(Scalar S) {
+	public Scal sub(Scal S) {
 		return add(S.neg());
 	}
 
-	public boolean equals(Scalar S) {
+	public boolean equals(Scal S) {
 		if (t == 0)
 			return S.t == 0;
 		return t == S.t && b == S.b;
 	}
 
 	@Override
-	Scalar undef() {
+	Scal undef() {
 		return UNDEFINED;
+	}
+
+	@Override
+	String getType() {
+		return "Scal";
 	}
 }
