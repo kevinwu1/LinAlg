@@ -3,11 +3,10 @@ package linAlg;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Vec<T extends MathOb<T>> extends MathOb<Vec<T>> {
+public class Vec<T extends Obj<T>> extends Obj<Vec<T>> {
 	private final List<T> data = new ArrayList<>();
 
-	@Override
-	public Vec<T> undef() {
+	public static <X extends Obj<X>> Vec<X> und() {
 		return new Vec<>();
 	}
 
@@ -67,7 +66,7 @@ public class Vec<T extends MathOb<T>> extends MathOb<Vec<T>> {
 		data.set(i, d);
 	}
 
-	public static class VecBuilder<T extends MathOb<T>> {
+	public static class VecBuilder<T extends Obj<T>> {
 		List<T> data = new ArrayList<>();
 
 		VecBuilder() {
@@ -169,5 +168,10 @@ public class Vec<T extends MathOb<T>> extends MathOb<Vec<T>> {
 	@Override
 	String getType() {
 		return "Vec";
+	}
+
+	@Override
+	Vec<T> undef() {
+		return new Vec<>();
 	}
 }

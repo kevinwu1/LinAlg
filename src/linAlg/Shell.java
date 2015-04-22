@@ -5,139 +5,217 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
 public class Shell {
-	private final Stack<MathOb<?>> st = new Stack<>();
-	private final Map<String, MathOb<?>> mem = new HashMap<>();
+	private final Stack<Obj<?>> st = new Stack<>();
+	private final Map<String, Obj<?>> mem = new HashMap<>();
+	Map<String, ShellCommand> comms = new HashMap<>();
 
-	Shell(Map<String, ? extends MathOb<?>> mem) {
+	void addComm(String name, ShellCommand comm) {
+		comms.put(name, comm);
+	}
+
+	void addComm(String[] names, ShellCommand comm) {
+		for (String name : names)
+			addComm(name, comm);
+	}
+
+	Shell(Map<String, ? extends Obj<?>> mem) {
 		this.mem.putAll(mem);
+		addComm(new String[] { "`", "st" }, new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+			}
+		});
+		addComm("pop", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				System.out.println(st.pop());
+			}
+		});
+		addComm("mem", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				System.out.println(stringMem());
+			}
+		});
+		addComm("clear", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				st.clear();
+			}
+		});
+		addComm(new String[] { "t", "T" }, new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.T();
+			}
+		});
+		addComm(new String[] { "tr", "TR" }, new UnaryShellCommand() {
+			@Override
+			public Obj<Scal> call(Mat m) {
+				return m.tr();
+			}
+		});
+		addComm(new String[] { "ref", "REF" }, new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.ref();
+			}
+		});
+		addComm(new String[] { "rref", "RREF" }, new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.rref();
+			}
+		});
+		addComm("det", new UnaryShellCommand() {
+			@Override
+			public Obj<Scal> call(Mat m) {
+				return m.det();
+			}
+		});
+		addComm("inv", new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.inverse();
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s) {
+				return s.inverse();
+			}
+		});
+		addComm("matI", new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Scal s) {
+				return Mat.I(s.t);
+			}
+		});
+		addComm("+", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m1, Mat m2) {
+				return m1.add(m2);
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s1, Scal s2) {
+				return s1.add(s2);
+			}
+		});
+		addComm("-", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m1, Mat m2) {
+				return m1.sub(m2);
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s1, Scal s2) {
+				return s1.sub(s2);
+			}
+		});
+		addComm("*", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m1, Mat m2) {
+				return m1.mult(m2);
+			}
+
+			@Override
+			public Obj<Mat> call(Mat m, Scal s) {
+				return m.mult(s);
+			}
+
+			@Override
+			public Obj<Mat> call(Scal s, Mat m) {
+				return m.mult(s);
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s1, Scal s2) {
+				return s1.mult(s2);
+			}
+		});
+		addComm("/", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m, Scal s) {
+				return m.div(s);
+			}
+
+			@Override
+			public Obj<Mat> call(Scal s, Mat m) {
+				return m.div(s);
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s1, Scal s2) {
+				return s1.div(s2);
+			}
+		});
+		addComm("aug", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m1, Mat m2) {
+				return m1.augment(m2);
+			}
+		});
+		addComm("pow", new BinaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m, Scal s) {
+				return m.pow(s.t);
+			}
+
+			@Override
+			public Obj<Scal> call(Scal s1, Scal s2) {
+				return s1.pow(s2.t);
+			}
+		});
+		addComm("mat", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				int r = Runner.scan.nextInt();
+				int c = Runner.scan.nextInt();
+				Scal[] d = new Scal[r * c];
+				for (int i = 0; i < r * c; i++)
+					d[i] = Scal.parse(Runner.scan.next());
+				st.push(new Mat(r, c, d));
+				Runner.scan.nextLine();
+			}
+		});
+		addComm("swap", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				Obj<?> t = st.pop();
+				Obj<?> b = st.pop();
+				st.push(t);
+				st.push(b);
+			}
+		});
 	}
 
 	void eval(String s) {
 		if (s.contains("="))
 			mem.put(s.split("=")[0], st.pop());
-		else
-			switch (s) {
-			case "`": // just print stack
-				break;
-			case "pop":
-				System.out.println(st.pop());
-				break;
-			case "mem":
-				System.out.println(stringMem());
-				break;
-			case "*": {
-				if (st.size() < 2)
-					break;
-				MathOb<?> v1 = st.pop();
-				MathOb<?> v2 = st.pop();
-				boolean b1 = v1.getType().equals("Mat");
-				boolean b2 = v2.getType().equals("Mat");
-				if (b1)
-					if (b2)
-						st.push(((Mat) v1).mult((Mat) v2));
-					else
-						st.push(((Mat) v1).mult((Scal) v2));
-				else if (b2)
-					st.push(((Mat) v2).mult((Scal) v1));
-				else
-					st.push(((Scal) v2).mult((Scal) v1));
-				break;
-			}
-			case "/": {
-				if (st.size() < 2)
-					break;
-				MathOb<?> v1 = st.pop();
-				MathOb<?> v2 = st.pop();
-				boolean b1 = v1.getType().equals("Mat");
-				boolean b2 = v2.getType().equals("Mat");
-				if (b1)
-					if (b2) {
-						st.push(v2);
-						st.push(v1);
-					}
-					else
-						st.push(((Mat) v1).div((Scal) v2));
-				else if (b2)
-					st.push(((Mat) v2).div((Scal) v1));
-				else
-					st.push(((Scal) v2).div((Scal) v1));
-				break;
-			}
-			case "+": {
-				if (st.size() < 2)
-					break;
-				MathOb<?> v1 = st.pop();
-				MathOb<?> v2 = st.pop();
-				boolean b1 = v1.getType().equals("Mat");
-				boolean b2 = v2.getType().equals("Mat");
-				if (b1)
-					if (b2)
-						st.push(((Mat) v1).add((Mat) v2));
-					else
-						st.push(((Mat) v1).add((Scal) v2));
-				else if (b2)
-					st.push(((Mat) v2).add((Scal) v1));
-				else
-					st.push(((Scal) v2).add((Scal) v1));
-				break;
-			}
-			case "-": {
-				if (st.size() < 2)
-					break;
-				MathOb<?> v1 = st.pop();
-				MathOb<?> v2 = st.pop();
-				boolean b1 = v1.getType().equals("Mat");
-				boolean b2 = v2.getType().equals("Mat");
-				if (b1)
-					if (b2)
-						st.push(((Mat) v1).sub((Mat) v2));
-					else
-						st.push(((Mat) v1).sub((Scal) v2));
-				else if (b2)
-					st.push(((Mat) v2).sub((Scal) v1));
-				else
-					st.push(((Scal) v2).sub((Scal) v1));
-				break;
-			}
-			case "t": {
-				MathOb<?> v = st.pop();
-				boolean b = v.getType().equals("Mat");
-				if (b)
-					st.push(((Mat) v).t());
-				else
-					st.push(v);
-				break;
-			}
-			case "tr": {
-				MathOb<?> v = st.pop();
-				boolean b = v.getType().equals("Mat");
-				if (b)
-					st.push(((Mat) v).tr());
-				else
-					st.push(v);
-				break;
-			}
-			default:
-				if (mem.containsKey(s))
-					st.push(mem.get(s));
-				else if (!st.isEmpty())
-					mem.put(s, st.peek());
-			}
+		else if (comms.containsKey(s)) {
+			System.out.println(s);
+			comms.get(s).call(st);
+		}
+		else {
+			if (Pattern.matches("-?[0-9]", s))
+				st.push(new Scal(Integer.parseInt(s)));
+			else if (Pattern.matches("\\w=", s))
+				mem.put(s.substring(0, s.length() - 1), st.peek());
+			else if (mem.containsKey(s))
+				st.push(mem.get(s));
+		}
 		System.out.println(stringStack());
-	}
-
-	MathOb<?> parse(String exp) {
-		return null;
 	}
 
 	String stringStack() {
 		if (st.isEmpty())
-			return "| Stack Empty";
+			return "| Empty Stack";
 		List<String[]> items = new ArrayList<>();
 		int size = 0;
-		for (MathOb<?> s : st) {
+		for (Obj<?> s : st) {
 			String[] str = s.toString().trim().split(System.lineSeparator());
 			items.add(str);
 			size = Math.max(size, str.length);

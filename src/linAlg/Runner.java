@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class Runner {
+	public static Scanner scan = new Scanner(System.in);
+
 	public static void main(String[] args) {
 		Mat A = new Mat(3, 2, 3, 0, -1, 2, 1, 1);
 		Mat B = new Mat(2, 2, 4, -1, 0, 2);
@@ -35,9 +37,7 @@ public class Runner {
 		mats.put("D", D);
 		mats.put("E", E);
 		Shell s = new Shell(mats);
-		try (Scanner scan = new Scanner(System.in)) {
-			while (true)
-				s.eval(scan.next());
-		}
+		while (true)
+			s.eval(scan.next());
 	}
 }

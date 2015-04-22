@@ -3,7 +3,9 @@ package linAlg;
 import static math.Mathstuff.GCF;
 import static math.Mathstuff.factor;
 
-public class Scal extends MathOb<Scal> {
+import java.util.regex.Pattern;
+
+public class Scal extends Obj<Scal> {
 	public static final Scal ZERO = new Scal(0);
 	public static final Scal UNDEFINED = new Scal(0, 0);
 
@@ -19,7 +21,7 @@ public class Scal extends MathOb<Scal> {
 		reduce();
 	}
 
-	public <T extends MathOb<T>> Vec<T> mult(Vec<T> v) {
+	public <T extends Obj<T>> Vec<T> mult(Vec<T> v) {
 		return null;
 	}
 
@@ -100,6 +102,12 @@ public class Scal extends MathOb<Scal> {
 		return new Scal(b, t);
 	}
 
+	public Scal pow(int i) {
+		if (i < 0)
+			return inverse().pow(-i);
+		return new Scal((int) Math.pow(t, i), (int) Math.pow(b, i));
+	}
+
 	@Override
 	public Scal sub(Scal S) {
 		return add(S.neg());
@@ -119,5 +127,17 @@ public class Scal extends MathOb<Scal> {
 	@Override
 	String getType() {
 		return "Scal";
+	}
+
+	public static Scal parse(String s) {
+		if (s.contains("/") && Pattern.matches("-?\\d+/\\d+", s)) {
+			return new Scal(Integer.parseInt(s.split("/")[0]), Integer.parseInt(s.split("/")[1]));
+		}
+		else if (Pattern.matches("-?/\\d+", s)) {
+			return new Scal(1, Integer.parseInt(s.substring(1)));
+		}
+		else if (s.matches("-?\\d+"))
+			return new Scal(Integer.parseInt(s));
+		return UNDEFINED;
 	}
 }
