@@ -269,6 +269,32 @@ public class Mat extends Obj<Mat> {
 		return o;
 	}
 
+	public Mat minors() {
+		VecBuilder<Vec<Scal>> vb = new VecBuilder<>();
+		for (int i = 0; i < data.size(); i++) {
+			VecBuilder<Scal> vs = new VecBuilder<>();
+			for (int j = 0; j < data.size(); j++) {
+				vs.push(without(i, j).det());
+			}
+			vb.push(vs.build());
+		}
+		return new Mat(vb.build());
+	}
+
+	public Mat cofacts() {
+		VecBuilder<Vec<Scal>> vb = new VecBuilder<>();
+		for (int i = 0; i < data.size(); i++) {
+			VecBuilder<Scal> vs = new VecBuilder<>();
+			for (int j = 0; j < data.size(); j++) {
+				vs.push(without(i, j).det().mult(new Scal((i + j) % 2 == 0 ? 1 : -1)));
+			}
+			System.out.println("vs: " + vs);
+			vb.push(vs.build());
+		}
+		System.out.println("vb: " + vb);
+		return new Mat(vb.build());
+	}
+
 	private Mat without(int i, int j) {
 		VecBuilder<Vec<Scal>> vb = new VecBuilder<>();
 		for (int a = 0; a < data.size(); a++)

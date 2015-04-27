@@ -4,25 +4,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Stack;
 import java.util.regex.Pattern;
+
+import linAlg.Vec.VecBuilder;
 
 public class Shell {
 	private final Stack<Obj<?>> st = new Stack<>();
 	private final Map<String, Obj<?>> mem = new HashMap<>();
 	Map<String, ShellCommand> comms = new HashMap<>();
+	private final List<String> hist = new ArrayList<>();
 
-	void addComm(String name, ShellCommand comm) {
+	public void addAll(Map<String, ? extends Obj<?>> mem) {
+		this.mem.putAll(mem);
+	}
+
+	private void addComm(String name, ShellCommand comm) {
 		comms.put(name, comm);
 	}
 
-	void addComm(String[] names, ShellCommand comm) {
+	private void addComm(String[] names, ShellCommand comm) {
 		for (String name : names)
 			addComm(name, comm);
 	}
 
-	Shell(Map<String, ? extends Obj<?>> mem) {
-		this.mem.putAll(mem);
+	Shell(final Scanner scan) {
 		addComm(new String[] { "`", "st" }, new ShellCommand() {
 			@Override
 			public void call(Stack<Obj<?>> st) {
@@ -70,6 +77,12 @@ public class Shell {
 				return m.rref();
 			}
 		});
+		addComm("norm", new UnaryShellCommand() {
+			@Override
+			public Obj<Scal> call(Vec<?> v) {
+				return VecTools.norm(v.castTo(Scal.class));
+			}
+		});
 		addComm("det", new UnaryShellCommand() {
 			@Override
 			public Obj<Scal> call(Mat m) {
@@ -87,10 +100,28 @@ public class Shell {
 				return s.inverse();
 			}
 		});
+		addComm("minors", new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.minors();
+			}
+		});
+		addComm("cofacts", new UnaryShellCommand() {
+			@Override
+			public Obj<Mat> call(Mat m) {
+				return m.cofacts();
+			}
+		});
 		addComm("matI", new UnaryShellCommand() {
 			@Override
 			public Obj<Mat> call(Scal s) {
 				return Mat.I(s.t);
+			}
+		});
+		addComm("toVecs", new UnaryShellCommand() {
+			@Override
+			public Obj<Vec<Vec<Scal>>> call(Mat m) {
+				return new Vec<>(m.data.data());
 			}
 		});
 		addComm("+", new BinaryShellCommand() {
@@ -103,6 +134,11 @@ public class Shell {
 			public Obj<Scal> call(Scal s1, Scal s2) {
 				return s1.add(s2);
 			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> v1, Vec<?> v2) {
+				return v1.castTo(Scal.class).add(v2.castTo(Scal.class));
+			}
 		});
 		addComm("-", new BinaryShellCommand() {
 			@Override
@@ -113,6 +149,11 @@ public class Shell {
 			@Override
 			public Obj<Scal> call(Scal s1, Scal s2) {
 				return s1.sub(s2);
+			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> v1, Vec<?> v2) {
+				return v1.castTo(Scal.class).sub(v2.castTo(Scal.class));
 			}
 		});
 		addComm("*", new BinaryShellCommand() {
@@ -135,6 +176,16 @@ public class Shell {
 			public Obj<Scal> call(Scal s1, Scal s2) {
 				return s1.mult(s2);
 			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> s1, Scal s2) {
+				return s1.castTo(Scal.class).mult(s2);
+			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Scal s1, Vec<?> s2) {
+				return s2.castTo(Scal.class).mult(s1);
+			}
 		});
 		addComm("/", new BinaryShellCommand() {
 			@Override
@@ -150,6 +201,16 @@ public class Shell {
 			@Override
 			public Obj<Scal> call(Scal s1, Scal s2) {
 				return s1.div(s2);
+			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> m, Scal s) {
+				return m.castTo(Scal.class).div(s);
+			}
+
+			@Override
+			public Obj<Vec<Scal>> call(Scal s, Vec<?> m) {
+				return m.castTo(Scal.class).div(s);
 			}
 		});
 		addComm("aug", new BinaryShellCommand() {
@@ -169,16 +230,48 @@ public class Shell {
 				return s1.pow(s2.t);
 			}
 		});
+		addComm("dot", new BinaryShellCommand() {
+			@Override
+			public Obj<Scal> call(Vec<?> v1, Vec<?> v2) {
+				return v1.castTo(Scal.class).dot(v2.castTo(Scal.class));
+			}
+		});
+		addComm("cross", new BinaryShellCommand() {
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> v1, Vec<?> v2) {
+				return VecTools.cross(v1.castTo(Scal.class), v2.castTo(Scal.class));
+			}
+		});
+		addComm("proj", new BinaryShellCommand() {
+			@Override
+			public Obj<Vec<Scal>> call(Vec<?> v1, Vec<?> v2) {
+				return VecTools.project(v1.castTo(Scal.class), v2.castTo(Scal.class));
+			}
+		});
+		addComm("vec", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				int r = scan.nextInt();
+				hist.add(Integer.toString(r));
+				VecBuilder<Scal> vs = new VecBuilder<>();
+				for (int i = 0; i < r; i++) {
+					int n = scan.nextInt();
+					hist.add(Integer.toString(n));
+					vs.push(new Scal(n));
+				}
+				st.push(vs.build());
+			}
+		});
 		addComm("mat", new ShellCommand() {
 			@Override
 			public void call(Stack<Obj<?>> st) {
-				int r = Runner.scan.nextInt();
-				int c = Runner.scan.nextInt();
+				int r = scan.nextInt();
+				int c = scan.nextInt();
 				Scal[] d = new Scal[r * c];
 				for (int i = 0; i < r * c; i++)
-					d[i] = Scal.parse(Runner.scan.next());
+					d[i] = Scal.parse(scan.next());
 				st.push(new Mat(r, c, d));
-				Runner.scan.nextLine();
+				scan.nextLine();
 			}
 		});
 		addComm("swap", new ShellCommand() {
@@ -190,9 +283,18 @@ public class Shell {
 				st.push(b);
 			}
 		});
+		addComm("hist", new ShellCommand() {
+			@Override
+			public void call(Stack<Obj<?>> st) {
+				for (String s : hist)
+					System.out.println(s);
+			}
+		});
 	}
 
 	void eval(String s) {
+		hist.add(s);
+		System.out.println(s);
 		if (s.contains("="))
 			mem.put(s.split("=")[0], st.pop());
 		else if (comms.containsKey(s)) {
@@ -200,7 +302,7 @@ public class Shell {
 			comms.get(s).call(st);
 		}
 		else {
-			if (Pattern.matches("-?[0-9]", s))
+			if (Pattern.matches("-?[0-9]+", s))
 				st.push(new Scal(Integer.parseInt(s)));
 			else if (Pattern.matches("\\w=", s))
 				mem.put(s.substring(0, s.length() - 1), st.peek());

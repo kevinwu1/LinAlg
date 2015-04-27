@@ -8,15 +8,23 @@ public abstract class UnaryShellCommand implements ShellCommand {
 		if (st.size() < 1)
 			return;
 		Obj<?> v1 = st.pop();
-		boolean b1 = v1.getType().equals("Mat");
-		Obj<?> ans;
-		if (b1)
+		Obj<?> ans = null;
+		switch (v1.getType()) {
+		case "Mat":
 			ans = call((Mat) v1);
-		else
+			break;
+		case "Scal":
 			ans = call((Scal) v1);
-		if (ans == null) {
-			st.push(v1);
+			break;
+		case "Vec":
+			ans = call((Vec<?>) v1);
+			break;
+		default:
+			System.err.println("NO MATCH: " + v1.getType());
+			break;
 		}
+		if (ans == null)
+			st.push(v1);
 		else
 			st.push(ans);
 	}
@@ -26,6 +34,10 @@ public abstract class UnaryShellCommand implements ShellCommand {
 	}
 
 	public Obj<?> call(Scal s) {
+		return null;
+	}
+
+	public Obj<?> call(Vec<?> v) {
 		return null;
 	}
 

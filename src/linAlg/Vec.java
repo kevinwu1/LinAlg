@@ -49,11 +49,6 @@ public class Vec<T extends Obj<T>> extends Obj<Vec<T>> {
 		return vb.build();
 	}
 
-	@Override
-	public String toString() {
-		return data == null ? "UNDEFINED" : data.toString();
-	}
-
 	public List<T> data() {
 		return data;
 	}
@@ -89,6 +84,11 @@ public class Vec<T extends Obj<T>> extends Obj<Vec<T>> {
 
 		Vec<T> build() {
 			return new Vec<>(data);
+		}
+
+		@Override
+		public String toString() {
+			return data.toString();
 		}
 
 	}
@@ -166,12 +166,36 @@ public class Vec<T extends Obj<T>> extends Obj<Vec<T>> {
 	}
 
 	@Override
-	String getType() {
+	public String getType() {
 		return "Vec";
+	}
+
+	public List<T> getData() {
+		return data;
+	}
+
+	public String getInnerType() {
+		return data == null ? null : data.get(0).getType();
 	}
 
 	@Override
 	Vec<T> undef() {
 		return new Vec<>();
+	}
+
+	<X extends Obj<X>> Vec<X> undefin() {
+		return new Vec<>();
+	}
+
+	@SuppressWarnings("unchecked")
+	public <X extends Obj<X>> Vec<X> castTo(Class<X> c) {
+		if (data.get(0).getClass().equals(c))
+			return new Vec<>((List<X>) data);
+		return undefin();
+	}
+
+	@Override
+	public String toString() {
+		return data == null ? "UNDEFINED" : data.toString().replaceAll(" ", "\t").replace("[", "(").replace("]", ")");
 	}
 }
