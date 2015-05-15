@@ -248,6 +248,16 @@ public class Shell {
 				return VecTools.project(v1.castTo(Scal.class), v2.castTo(Scal.class));
 			}
 		});
+		addComm("split", new BinaryShellCommand() {
+			@Override
+			public Obj<?> call(Mat m, Scal s) {
+				if (s.b != 1)
+					return null;
+				Mat[] spl = m.splitCol(s.t);
+				st.push(spl[0]);
+				return spl[1];
+			}
+		});
 		addComm("vec", new ShellCommand() {
 			@Override
 			public void call(Stack<Obj<?>> st) {
@@ -265,13 +275,35 @@ public class Shell {
 		addComm("mat", new ShellCommand() {
 			@Override
 			public void call(Stack<Obj<?>> st) {
-				int r = scan.nextInt();
-				int c = scan.nextInt();
+				Obj<?> oc = st.pop();
+				Obj<?> or = st.pop();
+				int r = 0;
+				int c = 0;
+				if (or instanceof Scal)
+					if (((Scal) or).b == 1)
+						r = ((Scal) or).t;
+				if (oc instanceof Scal)
+					if (((Scal) oc).b == 1)
+						c = ((Scal) oc).t;
+				if (r == 0 || c == 0) {
+					st.push(or);
+					st.push(oc);
+					return;
+				}
 				Scal[] d = new Scal[r * c];
-				for (int i = 0; i < r * c; i++)
-					d[i] = Scal.parse(scan.next());
+				for (int i = r * c - 1; i >= 0; i--) {
+					Obj<?> nu = st.pop();
+					if (nu instanceof Scal)
+						d[i] = (Scal) nu;
+					else {
+						for (i++; i < r * c;)
+							st.push(d[i++]);
+						st.push(or);
+						st.push(oc);
+						return;
+					}
+				}
 				st.push(new Mat(r, c, d));
-				scan.nextLine();
 			}
 		});
 		addComm("swap", new ShellCommand() {
@@ -330,7 +362,8 @@ public class Shell {
 					o.append(items.get(j)[i] + "\t");
 				else
 					for (int k = 0; k < items.get(j)[0].split("\t").length; k++)
-						o.append("\t");
+						for (int l = 0; l < items.get(j)[0].split("\t")[k].length(); l += 8)
+							o.append("\t");
 			o.append(System.lineSeparator());
 		}
 		return o.toString();

@@ -179,6 +179,19 @@ public class Vec<T extends Obj<T>> extends Obj<Vec<T>> {
 	}
 
 	@Override
+	public boolean equals(Object d) {
+		if (d instanceof Vec<?>)
+			if (data.size() == ((Vec<?>) d).data.size()) {
+				for (int i = 0; i < data.size(); i++)
+					if (!data.get(i).equals(((Vec<?>) d).data.get(i)))
+						return false;
+				return true;
+			}
+		// return data.equals(((Vec<?>) d).data);
+		return false;
+	}
+
+	@Override
 	Vec<T> undef() {
 		return new Vec<>();
 	}

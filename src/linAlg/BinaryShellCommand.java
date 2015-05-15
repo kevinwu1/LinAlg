@@ -4,8 +4,11 @@ import java.util.Stack;
 
 public abstract class BinaryShellCommand implements ShellCommand {
 
+	Stack<Obj<?>> st;
+
 	@Override
 	public void call(Stack<Obj<?>> st) {
+		this.st = st;
 		if (st.size() < 2)
 			return;
 		Obj<?> v1 = st.pop();

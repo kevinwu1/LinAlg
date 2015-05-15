@@ -113,10 +113,14 @@ public class Scal extends Obj<Scal> {
 		return add(S.neg());
 	}
 
-	public boolean equals(Scal S) {
-		if (t == 0)
-			return S.t == 0;
-		return t == S.t && b == S.b;
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Scal) {
+			if (t == 0)
+				return ((Scal) o).t == 0;
+			return t == ((Scal) o).t && b == ((Scal) o).b;
+		}
+		return false;
 	}
 
 	@Override

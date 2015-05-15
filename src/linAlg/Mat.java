@@ -83,7 +83,7 @@ public class Mat extends Obj<Mat> {
 			sb.append(v.toString());
 			sb.append(System.lineSeparator());
 		}
-		return sb.toString().replaceAll(" ", "\t");
+		return sb.toString().replaceAll(",", "").replaceAll(" ", "\t").replaceAll("\\(", "[").replaceAll("\\)", "]");
 	}
 
 	static Vec<Vec<Scal>> rref(Vec<Vec<Scal>> mat) {
@@ -206,8 +206,7 @@ public class Mat extends Obj<Mat> {
 
 	@Override
 	public Mat add(Mat t) {
-		if (isUndefined(this) || isUndefined(t) || data.size() != t.data.size()
-				|| data.get(0).size() != t.data.get(0).size())
+		if (isUndefined(this) || isUndefined(t) || data.size() != t.data.size() || data.get(0).size() != t.data.get(0).size())
 			return undef();
 		return new Mat(data.add(t.data));
 	}
@@ -311,34 +310,39 @@ public class Mat extends Obj<Mat> {
 	public Mat inverse() {
 		if (!isSquare(this))
 			return UNDEFINED;
-		Vec<Vec<Scal>> o = I(data.size()).data;
-		Vec<Vec<Scal>> mat = data.clone();
-		ou: for (int c = 0, r = 0; c < mat.get(0).size() && r < mat.size(); c++, r++) {
-			while (firstNonZero(mat.get(r)) != c) {
-				if (c == mat.size())
-					break ou;
-				int j;
-				for (j = r; j < mat.size(); j++)
-					if (!mat.get(j).get(c).equals(Scal.ZERO)) {
-						swap(o, r, j);
-						swap(mat, r, j);
-						break;
-					}
-				if (j == mat.size())
-					c++;
-			}
-			o.set(r, o.get(r).mult(mat.get(r).get(c).recip()));
-			mat.set(r, mat.get(r).mult(mat.get(r).get(c).recip()));
-			for (int j = 0; j < r; j++) {
-				multRep(o, r, j, mat.get(j).get(c).neg());
-				multRep(mat, r, j, mat.get(j).get(c).neg());
-			}
-			for (int j = r + 1; j < mat.size(); j++) {
-				multRep(o, r, j, mat.get(j).get(c).neg());
-				multRep(mat, r, j, mat.get(j).get(c).neg());
-			}
-		}
-		return I(data.size()).data.equals(mat) ? new Mat(o) : UNDEFINED;
+		Mat[] x = augment(I(data.size())).rref().splitCol(data.size());
+		if (x[0].equals(I(data.size())))
+			return x[1];
+		return UNDEFINED;
+		// Vec<Vec<Scal>> o = I(data.size()).data;
+		// Vec<Vec<Scal>> mat = data.clone();
+		// ou: for (int c = 0, r = 0; c < mat.get(0).size() && r < mat.size(); c++, r++) {
+		// while (firstNonZero(mat.get(r)) != c) {
+		// if (c == mat.size())
+		// break ou;
+		// int j;
+		// for (j = r; j < mat.size(); j++)
+		// if (!mat.get(j).get(c).equals(Scal.ZERO)) {
+		// swap(o, r, j);
+		// swap(mat, r, j);
+		// break;
+		// }
+		// if (j == mat.size())
+		// c++;
+		// }
+		// o.set(r, o.get(r).mult(mat.get(r).get(c).recip()));
+		// mat.set(r, mat.get(r).mult(mat.get(r).get(c).recip()));
+		// for (int j = 0; j < r; j++) {
+		// multRep(o, r, j, mat.get(j).get(c).neg());
+		// multRep(mat, r, j, mat.get(j).get(c).neg());
+		// }
+		// for (int j = r + 1; j < mat.size(); j++) {
+		// multRep(o, r, j, mat.get(j).get(c).neg());
+		// multRep(mat, r, j, mat.get(j).get(c).neg());
+		// }
+		// }
+		// return I(data.size()).data.equals(mat) ? new Mat(o) : UNDEFINED;
+
 		// Scal det = det();
 		// System.out.println("det: " + det.toString());
 		// if (!det.equals(Scal.ZERO) && !det.equals(Scal.UNDEFINED))
@@ -361,18 +365,39 @@ public class Mat extends Obj<Mat> {
 			return UNDEFINED;
 		VecBuilder<Vec<Scal>> ou = new VecBuilder<>();
 		for (int i = 0; i < data.size(); i++) {
-			ou.push(new Vec<>(java.util.stream.Stream.concat(data.get(i).data().stream(),
-					mat.data.get(i).data().stream()).collect(Collectors.toList())));
+			ou.push(new Vec<>(java.util.stream.Stream.concat(data.get(i).data().stream(), mat.data.get(i).data().stream()).collect(Collectors.toList())));
 		}
 		return new Mat(ou.build());
 	}
 
-	public boolean equals(Mat t) {
-		if (data == null ^ t.data == null)
-			return false;
-		if (data == null && t.data == null)
-			return true;
-		return data.equals(t.data);
+	public Mat[] splitCol(int pos) {
+		VecBuilder<Vec<Scal>> l = new VecBuilder<>();
+		VecBuilder<Vec<Scal>> r = new VecBuilder<>();
+		for (Vec<Scal> v : data.data()) {
+			VecBuilder<Scal> pl = new VecBuilder<>();
+			VecBuilder<Scal> pr = new VecBuilder<>();
+			for (int i = 0; i < v.size(); i++) {
+				if (i < pos)
+					pl.push(v.get(i));
+				else
+					pr.push(v.get(i));
+			}
+			l.push(pl.build());
+			r.push(pr.build());
+		}
+		return new Mat[] { new Mat(l.build()), new Mat(r.build()) };
+	}
+
+	@Override
+	public boolean equals(Object t) {
+		if (t instanceof Mat) {
+			if (data == null ^ ((Mat) t).data == null)
+				return false;
+			if (data == null && ((Mat) t).data == null)
+				return true;
+			return data.equals(((Mat) t).data);
+		}
+		return false;
 	}
 
 	public static boolean isUndefined(Mat mat) {
